@@ -26,6 +26,7 @@ Random.seed!(1)
             @test Diagonal(x).diag === x
             @test Diagonal{elty}(x)::Diagonal{elty,typeof(x)} == DM
             @test Diagonal{elty}(x).diag === x
+            @test Diagonal{elty}(D) === D
         end
         @test eltype(Diagonal{elty}([1,2,3,4])) == elty
         @test isa(Diagonal{elty,Vector{elty}}(GenericArray([1,2,3,4])), Diagonal{elty,Vector{elty}})
@@ -177,6 +178,19 @@ Random.seed!(1)
         A = rand(elty, n, n)
         qrA = qr(A)
         @test qrA \ D ≈ A \ D
+
+        # HermOrSym
+        A     = rand(elty, n, n)
+        Asym  = Symmetric(A + transpose(A), :U)
+        Aherm = Hermitian(A + adjoint(A), :U)
+        @test Array(D*transpose(Asym)) ≈ Array(D) * Array(transpose(Asym))
+        @test Array(D*adjoint(Asym)) ≈ Array(D) * Array(adjoint(Asym))
+        @test Array(D*transpose(Aherm)) ≈ Array(D) * Array(transpose(Aherm))
+        @test Array(D*adjoint(Aherm)) ≈ Array(D) * Array(adjoint(Aherm))
+        @test Array(transpose(Asym)*transpose(D)) ≈ Array(transpose(Asym)) * Array(transpose(D))
+        @test Array(transpose(D)*transpose(Asym)) ≈ Array(transpose(D)) * Array(transpose(Asym))
+        @test Array(adjoint(Aherm)*adjoint(D)) ≈ Array(adjoint(Aherm)) * Array(adjoint(D))
+        @test Array(adjoint(D)*adjoint(Aherm)) ≈ Array(adjoint(D)) * Array(adjoint(Aherm))
 
         # Performance specialisations for A*_mul_B!
         vvv = similar(vv)
